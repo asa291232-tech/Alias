@@ -62,10 +62,10 @@
         <!-- Игровой экран -->
         <div id="gameScreen" class="hidden relative z-10 slide-in">
             <div id="scores" class="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8"></div>
-            <div id="word" class="word-card text-4xl font-bold text-center text-yellow-300 bg-gray-700/80 p-6 rounded-2xl mb-6 border-2 border-yellow-500/30">Нажмите "Начать игру"</div>
+            <div id="word" class="word-card text-4xl font-bold text-center text-yellow-300 bg-gray-700/80 p-6 rounded-2xl mb-6 border-2 border-yellow-500/30">Нажмите "Начать раунд"</div>
             <div id="timer" class="text-3xl font-semibold text-center text-cyan-400 mb-6">30</div>
             <div class="flex justify-center gap-4 flex-wrap">
-                <button id="startButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition button-glow">Начать игру</button>
+                <button id="startButton" class="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-xl transition button-glow">Начать раунд</button>
                 <button id="correctButton" class="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-xl transition button-glow" disabled>Правильно</button>
                 <button id="skipButton" class="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-xl transition button-glow" disabled>Пропустить</button>
             </div>
@@ -93,7 +93,6 @@
         let currentTeam = 0;
         let timeLeft = 30;
         let timer;
-        let isGameRunning = false;
         let numberOfTeams = 0;
 
         const teamSelection = document.getElementById("teamSelection");
@@ -130,38 +129,36 @@
                 timerDisplay.textContent = timeLeft;
                 if (timeLeft <= 0) {
                     clearInterval(timer);
-                    isGameRunning = false;
-                    wordDisplay.textContent = "Раунд окончен! Начать новый?";
-                    startButton.textContent = "Начать новый раунд";
+                    wordDisplay.textContent = "Раунд окончен!";
                     correctButton.disabled = true;
                     skipButton.disabled = true;
+                    startButton.classList.remove("hidden"); // Show start button when round ends
                     currentTeam = (currentTeam + 1) % numberOfTeams;
                     timeLeft = 30;
+                    if (currentTeam === 0) {
+                        wordDisplay.textContent = "Игра окончена!";
+                        startButton.classList.add("hidden"); // Hide start button when game ends
+                    }
                 }
             }, 1000);
         }
 
         startButton.addEventListener("click", () => {
-            if (!isGameRunning) {
-                isGameRunning = true;
-                timeLeft = 30;
-                timerDisplay.textContent = timeLeft;
-                wordDisplay.textContent = getRandomWord();
-                startButton.textContent = "Пауза";
-                correctButton.disabled = false;
-                skipButton.disabled = false;
-                startTimer();
-            } else {
-                isGameRunning = false;
+            // Clear any existing timer to prevent multiple timers
+            if (timer) {
                 clearInterval(timer);
-                startButton.textContent = "Возобновить";
-                correctButton.disabled = true;
-                skipButton.disabled = true;
             }
+            timeLeft = 30;
+            timerDisplay.textContent = timeLeft;
+            wordDisplay.textContent = getRandomWord();
+            startButton.classList.add("hidden"); // Hide start button when round starts
+            correctButton.disabled = false;
+            skipButton.disabled = false;
+            startTimer();
         });
 
         correctButton.addEventListener("click", () => {
-            if (isGameRunning) {
+            if (timeLeft > 0) {
                 scores[currentTeam]++;
                 updateScoresDisplay();
                 wordDisplay.textContent = getRandomWord();
@@ -169,7 +166,7 @@
         });
 
         skipButton.addEventListener("click", () => {
-            if (isGameRunning) {
+            if (timeLeft > 0) {
                 wordDisplay.textContent = getRandomWord();
             }
         });
